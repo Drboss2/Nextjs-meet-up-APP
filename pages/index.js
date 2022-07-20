@@ -1,34 +1,43 @@
-import { Fragment } from 'react';
-import Head from 'next/head';
+import Head from 'next/head'
+import { MongoClient } from "mongodb";
 
-import FeaturedPosts from '../components/home-page/featured-posts';
-import Hero from '../components/home-page/hero';
-import { getFeaturedPosts } from '../lib/posts-util';
+import MeetupList from "../components/meetups/MeetupList";
 
-function HomePage(props) {
-  return (
-    <Fragment>
+const HomePage =(props)=>{
+  return(
+    <>
       <Head>
-        <title>Max' Blog</title>
-        <meta
-          name='description'
-          content='I post about programming and web development.'
-        />
+        <title>React Next js meet app</title>
+        <meta name="description" content='nice next js app'/>
       </Head>
-      <Hero />
-      <FeaturedPosts posts={props.posts} />
-    </Fragment>
-  );
+      <MeetupList meetups={props.meetups}/>
+    </>
+  )
 }
+export async function getStaticProps(){
 
-export function getStaticProps() {
-  const featuredPosts = getFeaturedPosts();
+  const client = await MongoClient.connect('mongodb+srv://voke:123@nodeexpress.5wbm2.mongodb.net/nextjs?retryWrites=true&w=majority')
+  const db = client.db();
 
-  return {
-    props: {
-      posts: featuredPosts,
+  const meetupsCollections = db.collection('meetups')
+
+  const getmeetups = await meetupsCollections.find().toArray();
+
+  client.close()
+
+  return{
+    props:{
+      meetups: 
+        getmeetups.map((item,index)=>({
+          title:item.title,
+          image:item.image,
+          address:item.address,
+          description:item.description,
+          id:item._id.toString()
+        }))
     },
-  };
+    revalidate:1
+  }
 }
 
-export default HomePage;
+export default HomePage
